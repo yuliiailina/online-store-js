@@ -18,5 +18,6 @@ export const PER_PAGE = 12;
 
 export const STORAGE_KEYS = {
     WISHLIST: 'wishlist',
-    CART: 'cart'
+    CART: 'cart',
+    THEME: 'theme'
 }

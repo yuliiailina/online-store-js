@@ -73,7 +73,7 @@
   height: 400px;
   object-fit: contain;
   border-radius: 8px;
-  background: #f8f9fa;
+  background: var(--card-bg-color);
 }
 
 .modal-product__content {

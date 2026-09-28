@@ -15,6 +15,7 @@
   --card-bg-color: #f9f9f9;
   --border-color: #e0e0e0;
   --accent-color: #ff6b0a;
+}
 
   [data-theme='dark'] {
     --primary-text-color: #ffffff;
@@ -24,10 +25,11 @@
     --border-color: #333333;
     --accent-color: #ff6b0a;
   }
-}
 
 body {
   background-color: var(--bg-color);
   color: var(--primary-text-color);
   transition: background-color 0.3s, color 0.3s;
 }
+
+

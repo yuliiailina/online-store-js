@@ -1,4 +1,6 @@
+import { STORAGE_KEYS } from "./constants";
 import refs from "./refs";
+import { checkLocalStorage, getFromStorage } from "./storage";
 
 export function renderCategories(categories) {
     const markup = categories.map(category => 
@@ -39,12 +41,20 @@ export function hideLoadMore() {
     refs.loadMore.classList.add('is-hidden')
 }
 
-export function showLoader() {
-    refs.loader.forEach(container => container.classList.remove('is-hidden'))
+export function showProductListLoader() {
+    refs.productListLoader.classList.remove('is-hidden')
 }
 
-export function hideLoader() {
-    refs.loader.forEach(container => container.classList.add('is-hidden'))
+export function hideProductListLoader() {
+    refs.productListLoader.classList.add('is-hidden')
+}
+
+export function showModalLoader() {
+    refs.modalLoader.classList.remove('is-hidden')
+}
+
+export function hideModalLoader() {
+    refs.modalLoader.classList.add('is-hidden')
 }
 
 export function setActiveCategory(button) {
@@ -82,18 +92,36 @@ export function clearModal() {
     refs.modalProduct.innerHTML = "";
 }
 
-export function changeTextOfWishlistBtn() {
-    if (refs.modalBtnWishlist.textContent === "Add to Wishlist") {
+export function changeTextOfWishlistBtn(key, id) {
+    if (checkLocalStorage(key, id)) {
         refs.modalBtnWishlist.textContent = "Remove from Wishlist";
     } else {
         refs.modalBtnWishlist.textContent = "Add to Wishlist"
     }
  }
 
- export function changeTextOfCartBtn() {
-    if (refs.modalBtnAddToCart.textContent === "Add to Cart") {
+ export function changeTextOfCartBtn(key, id) {
+    if (checkLocalStorage(key, id)) {
         refs.modalBtnAddToCart.textContent = "Remove from Cart";
     } else {
         refs.modalBtnAddToCart.textContent = "Add to Cart"
     }
  }
+
+export function updateWishlistCount () {
+    const data = getFromStorage(STORAGE_KEYS.WISHLIST);
+    refs.wishlistLength.textContent = data.length;
+}
+
+export function updateCartCount() {
+    const data = getFromStorage(STORAGE_KEYS.CART);
+    refs.cartLength.textContent = data.length;
+}
+
+export function showScrollUpBtn() {
+    refs.scrollUpBtn.classList.add('scroll-top-btn--visible');
+}
+
+export function hideScrollUpBtn() {
+    refs.scrollUpBtn.classList.remove('scroll-top-btn--visible');
+}

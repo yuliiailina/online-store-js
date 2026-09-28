@@ -1,11 +1,13 @@
 import iziToast from "izitoast";
-import { getCategories, getProductByCategory, getProductById, getProductByQuery, getProducts } from "./products-api";
-import { changeTextOfWishlistBtn, clearGallery, clearModal, hideLoader, hideLoadMore, renderCategories, renderModalProduct, renderProducts, setActiveCategory, showLoader, showLoadMore, showNotFound } from "./render-function";
+import 'izitoast/dist/css/iziToast.min.css'; 
+import { getCategories, getProductByCategory, getProductById, getProductByQuery, getProducts, getProductsByIds } from "./products-api";
+import { changeTextOfCartBtn, changeTextOfWishlistBtn, clearGallery, clearModal, hideLoadMore, hideModalLoader, hideProductListLoader, hideScrollUpBtn, renderCategories, renderModalProduct, renderProducts, setActiveCategory, showLoadMore, showModalLoader, showNotFound, showProductListLoader, showScrollUpBtn, updateCartCount, updateWishlistCount } from "./render-function";
 import { checkLoadMore } from "./helpers";
 import { openModal } from "./modal";
 import refs from "./refs";
-import { checkLocalStorage, removeFromStorage, saveToStorage } from "./storage";
+import { checkLocalStorage, getFromStorage, removeFromStorage, saveToStorage } from "./storage";
 import { STORAGE_KEYS } from "./constants";
+import { closeCheckoutModal } from "./checkout-modal";
 
 let currentPage = 1;
 let currentCategory = "";
@@ -13,8 +15,11 @@ let currentQuery = "";
 let id = null;
 
 export async function initHomePage() {
+    updateWishlistCount ();
+    updateCartCount();
+
     try {
-        showLoader();
+        showProductListLoader();
         hideLoadMore();
         const result = await getCategories();
         const categories = ['all', ...result];
@@ -30,7 +35,7 @@ export async function initHomePage() {
         console.log(error)
         iziToast.error('Something went wrong. Please try again.')
     } finally {
-        hideLoader();
+        hideProductListLoader();
     }
 }
 
@@ -40,14 +45,14 @@ export async function showProductDitails(event) {
     if (!productItem) return;
     id = productItem.dataset.id;
     clearModal();
-    if (checkLocalStorage(STORAGE_KEYS.WISHLIST, id)) {
-        changeTextOfWishlistBtn();
-    }
+    
     openModal();
-    showLoader();
+    showModalLoader();
 
     try {
         const product = await getProductById(id);
+        changeTextOfWishlistBtn(STORAGE_KEYS.WISHLIST, id);
+        changeTextOfCartBtn(STORAGE_KEYS.CART, id);
         if (product) {
             renderModalProduct(product);
         }
@@ -55,7 +60,7 @@ export async function showProductDitails(event) {
         console.log(error)
         iziToast.error('Something went wrong. Please try again.')
     } finally {
-        hideLoader();
+        hideModalLoader();
     }
 }
 
@@ -63,7 +68,6 @@ export async function filterProductsByCategory(event) {
     if (!event.target.classList.contains('categories__btn')) return;
     const category = event.target.innerText;
     setActiveCategory(event.target);
-    showLoader();
 
     try {
         if (category === 'ALL') {
@@ -72,7 +76,6 @@ export async function filterProductsByCategory(event) {
             currentPage = 1;
             const {products, total, skip, limit} = await getProducts(currentPage);
             clearGallery();
-            // refs.productsList.innerHTML = "";
             renderProducts(products);
             checkLoadMore(total, skip, limit)? showLoadMore() : hideLoadMore();
             return;
@@ -80,9 +83,11 @@ export async function filterProductsByCategory(event) {
         currentCategory = category;
         currentQuery = "";
         currentPage = 1;
-        const {products, total, skip, limit} = await getProductByCategory(currentCategory, currentPage);
-        // refs.productsList.innerHTML = "";
         clearGallery();
+        hideLoadMore();
+        showProductListLoader();
+        
+        const {products, total, skip, limit} = await getProductByCategory(currentCategory, currentPage);
         if (products.length > 0) {
             renderProducts(products);
             checkLoadMore(total, skip, limit)? showLoadMore() : hideLoadMore();
@@ -94,14 +99,13 @@ export async function filterProductsByCategory(event) {
         console.log(error)
         iziToast.error('Something went wrong. Please try again.')
     } finally {
-        hideLoader();
+        hideProductListLoader();
     }
 }
 
 export async function handleSubmitSearchForm(event) {
     event.preventDefault();
     const query = event.currentTarget.elements.searchValue.value.trim();    
-    showLoader();
 
     try {
         if (query === "") {
@@ -110,9 +114,11 @@ export async function handleSubmitSearchForm(event) {
         currentQuery = query;
         currentCategory = "";
         currentPage = 1;
-        const {products, total, skip, limit} = await getProductByQuery(currentQuery, currentPage);
-        // refs.productsList.innerHTML = "";
         clearGallery();
+        hideLoadMore();
+        showProductListLoader();
+
+        const {products, total, skip, limit} = await getProductByQuery(currentQuery, currentPage);
         if (products.length > 0) {
             renderProducts(products);
             checkLoadMore(total, skip, limit)? showLoadMore() : hideLoadMore();
@@ -124,7 +130,7 @@ export async function handleSubmitSearchForm(event) {
         console.log(error)
         iziToast.error('Something went wrong. Please try again.')
     } finally {
-        hideLoader();
+        hideProductListLoader();
     }
 }
 
@@ -132,9 +138,8 @@ export async function clearSearchInput(event) {
     event.currentTarget.form.elements.searchValue.value = "";
 
     try {
-        showLoader();
+        showProductListLoader();
         hideLoadMore();
-        // refs.productsList.innerHTML = "";
         clearGallery();
         const {products, total, skip, limit} = await getProducts(currentPage);
         if (products.length > 0) {
@@ -147,14 +152,14 @@ export async function clearSearchInput(event) {
         console.log(error)
         iziToast.error('Something went wrong. Please try again.')
     } finally {
-        hideLoader();
+        hideProductListLoader();
     }
 }
 
 export async function handleLoadMore() {
     currentPage++;
     hideLoadMore();
-    showLoader();
+    showProductListLoader();
 
     try {
         if (currentQuery !== "") {
@@ -174,7 +179,7 @@ export async function handleLoadMore() {
         console.log(error)
         iziToast.error('Something went wrong. Please try again.')
     } finally {
-        hideLoader();
+        hideProductListLoader();
     }
 }
 
@@ -185,5 +190,200 @@ export function clickWishlistBtn() {
     } else {
         saveToStorage(STORAGE_KEYS.WISHLIST, id);
     }
-    changeTextOfWishlistBtn();
+    updateWishlistCount();
+    changeTextOfWishlistBtn(STORAGE_KEYS.WISHLIST, id);
+}
+
+export function clickCartBtn() {
+    if (!id) return;
+    if (checkLocalStorage(STORAGE_KEYS.CART, id)) {
+        removeFromStorage(STORAGE_KEYS.CART, id);
+    } else {
+        saveToStorage(STORAGE_KEYS.CART, id);
+    }
+    updateCartCount();
+    changeTextOfCartBtn(STORAGE_KEYS.CART, id);
+}
+
+let wishlistProducts = [];
+
+export async function initWishlistPage() {
+    updateWishlistCount();
+    updateCartCount();
+
+    const data = getFromStorage(STORAGE_KEYS.WISHLIST);
+    clearGallery();
+
+    if (data.length > 0) {
+        showProductListLoader();
+        try {
+            wishlistProducts = await getProductsByIds(data);
+            if (wishlistProducts.length > 0) {
+                renderProducts(wishlistProducts);
+            } else {
+                showNotFound();
+            }
+            
+        } catch (error) {
+            console.log(error);
+            iziToast.error('Something went wrong. Please try again.');
+        } finally {
+            hideProductListLoader();
+        }
+    } else {
+        showNotFound();
+    }
+}
+
+let cartProducts = [];
+
+export async function initCartPage() {
+    updateWishlistCount();
+    updateCartCount();
+
+    const data = getFromStorage(STORAGE_KEYS.CART);
+    clearGallery();
+    refs.cartItems.textContent = data.length;
+
+    if (data.length > 0) {
+        showProductListLoader();
+        try {
+            cartProducts = await getProductsByIds(data);
+            if (cartProducts.length > 0) {
+                renderProducts(cartProducts);
+                const totalPrice = cartProducts.reduce((acc, product) => acc + product.price, 0);
+                refs.checkoutPrice.textContent = `$ ${totalPrice.toFixed(2)}`;
+                const shippingPrice = totalPrice > 50 ? 0 : 10;
+                refs.checkoutShipping.textContent = shippingPrice === 0 ? "Free" : `$ ${shippingPrice}`;
+                const finalPrice = totalPrice + shippingPrice;
+                refs.checkoutTotal.textContent = `$ ${finalPrice.toFixed(2)}`;
+
+                refs.totalPrice.textContent = `$ ${totalPrice.toFixed(2)}`
+                refs.shippingPrice.textContent = shippingPrice === 0 ? "Free" : `$ ${shippingPrice}`;
+            } else {
+                showNotFound();
+            }
+            
+        } catch (error) {
+            console.log(error);
+            iziToast.error('Something went wrong. Please try again.');
+        } finally {
+            hideProductListLoader();
+        }
+    } else {
+        refs.totalPrice.textContent = '$ 0.00';
+        refs.shippingPrice.textContent = 'Free';
+        refs.checkoutPrice.textContent = '$ 0.00';
+        refs.checkoutShipping.textContent = 'Free';
+        refs.checkoutTotal.textContent = '$ 0.00';
+        
+        showNotFound();
+    }
+}
+
+export function handleWishlistSearch(event) {
+    event.preventDefault();
+    const query = event.currentTarget.elements.searchValue.value.toLowerCase().trim();    
+
+    try {
+        if (query === "") {
+            return iziToast.error('Enter your search query...');
+        };
+        
+        const filteredProducts = wishlistProducts.filter(product => product.title.toLowerCase().includes(query));
+        clearGallery();
+
+        if (filteredProducts.length > 0) {
+            renderProducts(filteredProducts);
+        } else {
+            showNotFound();
+        }
+    } catch(error) {
+        console.log(error)
+        iziToast.error('Something went wrong. Please try again.')
+    }
+}
+
+export function clearWishlistSearchInput(event) {
+    event.currentTarget.form.elements.searchValue.value = "";
+
+        clearGallery();
+        if (wishlistProducts.length > 0) {
+            renderProducts(wishlistProducts);
+        } else {
+            showNotFound();
+        } 
+}
+
+export function handleCartSearch(event) {
+    event.preventDefault();
+    const query = event.currentTarget.elements.searchValue.value.toLowerCase().trim();    
+
+    try {
+        if (query === "") {
+            return iziToast.error('Enter your search query...');
+        };
+        
+        const filteredProducts = cartProducts.filter(product => product.title.toLowerCase().includes(query));
+        clearGallery();
+
+        if (filteredProducts.length > 0) {
+            renderProducts(filteredProducts);
+        } else {
+            showNotFound();
+        }
+    } catch(error) {
+        console.log(error)
+        iziToast.error('Something went wrong. Please try again.')
+    }
+}
+
+export function clearCartSearchInput(event) {
+    event.currentTarget.form.elements.searchValue.value = "";
+
+        clearGallery();
+        if (cartProducts.length > 0) {
+            renderProducts(cartProducts);
+        } else {
+            showNotFound();
+        } 
+}
+
+export function handleScroll() {
+    if (window.scrollY > 300) {
+        showScrollUpBtn();
+    } else {
+        hideScrollUpBtn();
+    }
+}
+
+export function scrollUp() {
+    window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+    })
+}
+
+export function handleCheckoutSubmit(event) {
+    event.preventDefault();
+
+    const orderNumber = Math.floor(100000 + Math.random() * 900000);
+
+    refs.orderNumber.textContent = `#${orderNumber}`;
+
+    refs.checkoutSummary.classList.add('is-hidden');
+    refs.checkoutForm.classList.add('is-hidden');
+    refs.checkoutSuccess.classList.remove('is-hidden');
+}
+
+export async function handleContinueShopping() {
+    localStorage.removeItem(STORAGE_KEYS.CART);
+
+    refs.checkoutForm.reset();
+    refs.checkoutForm.classList.remove('is-hidden');
+    refs.checkoutSuccess.classList.add('is-hidden');
+
+    closeCheckoutModal();
+
+    await initCartPage();
 }

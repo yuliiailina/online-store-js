@@ -39,3 +39,7 @@ export async function getProductByQuery(query, currentPage) {
     }});
     return data;
 }
+
+export async function getProductsByIds(ids) {
+    return Promise.all(ids.map(id => getProductById(id)));
+}

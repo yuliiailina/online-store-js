@@ -57,7 +57,7 @@
 
 .products__brand--bold {
   font-weight: 500;
-  color: #2d3748;
+  color: var(--secondary-text-color);
 }
 
 .products__category {

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -17,6 +17,9 @@
       <div class="container product-page">
         <main>
           <ul class="products"></ul>
+          <div class="loader-container is-hidden" product-list-loader>
+            <div class="loader"></div>
+          </div>
           <div class="not-found">
             <div class="not-found__icon">
               <svg
@@ -61,7 +64,7 @@
                 </li>
                 <li class="cart-summary__item">
                   <span class="cart-summary__label">Shipping:</span>
-                  <span class="cart-summary__value">Free</span>
+                  <span class="cart-summary__value" data-shipping>Free</span>
                 </li>
               </ul>
 
@@ -76,6 +79,7 @@
       </div>
     </section>
     <load src="./partials/modal.html" />
+    <load src="./partials/checkout-modal.html" />
     <script type="module" src="./cart.js"></script>
   </body>
 </html>

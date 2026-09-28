@@ -32,7 +32,7 @@
 
   &:focus {
     outline: 2px solid #ff6b0a;
-    background: #fff;
+    background: var(--card-bg-color);
     box-shadow: 0 0 8px rgba(255, 107, 10, 0.2);
   }
 
@@ -40,6 +40,13 @@
     color: #6c757d;
     opacity: 0.8;
   }
+}
+
+[data-theme='dark'] .search-form__input:-webkit-autofill,
+[data-theme='dark'] .search-form__input:-webkit-autofill:hover,
+[data-theme='dark'] .search-form__input:-webkit-autofill:focus {
+    -webkit-text-fill-color: var(--primary-text-color);
+    -webkit-box-shadow: 0 0 0 1000px var(--card-bg-color) inset;
 }
 
 .search-form__btn {
