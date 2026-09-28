@@ -6,9 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Home page</title>
     <script type="module" crossorigin src="/blended_products/index.js"></script>
-    <link rel="modulepreload" crossorigin href="/blended_products/assets/styles-CRpl-H_W.js">
-    <link rel="modulepreload" crossorigin href="/blended_products/assets/vendor-ZnMw6IGI.js">
-    <link rel="stylesheet" crossorigin href="/blended_products/assets/styles-CDlNigh_.css">
+    <link rel="modulepreload" crossorigin href="/blended_products/assets/vendor-4yCzdkXl.js">
+    <link rel="modulepreload" crossorigin href="/blended_products/assets/handlers-DpeRdK0F.js">
+    <link rel="stylesheet" crossorigin href="/blended_products/assets/vendor-DnveWo0P.css">
+    <link rel="stylesheet" crossorigin href="/blended_products/assets/handlers-CzURhalZ.css">
   </head>
   <body>
     <header class="header">
@@ -68,7 +69,7 @@
           <ul class="categories"></ul>
           <ul class="products"></ul>
           <button class="load-more-btn is-hidden">Load More</button>
-          <div class="loader-container">
+          <div class="loader-container is-hidden" product-list-loader>
             <div class="loader"></div>
           </div>
           <div class="not-found">
@@ -103,8 +104,8 @@
     <div class="modal">
   <div class="modal__content">
     <button class="modal__close-btn" type="button"></button>
-    <div class="loader-container">
-      <div class="modal-loader"></div>
+    <div class="loader-container is-hidden" modal-loader>
+      <div class="loader"></div>
     </div>
     <div class="modal-product"></div>
     <div class="modal-product__actions">
